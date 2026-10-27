@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CASA Voice Log</title>
+  <meta name="description" content="Record a voice memo and post it to the job's Procore daily log through CASA.">
+  <meta name="theme-color" content="#0E1B36">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CASA Log">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <img class="logo" src="icons/casa-logo.png" alt="CASA">
+      <div class="who" id="who" hidden>
+        <span id="who-name"></span>
+        <button class="link" id="sign-out" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <!-- Signed out -->
+    <section id="signin-view" class="card center" hidden>
+      <h1>Voice Log</h1>
+      <p>Record a memo on site. CASA posts it to the job's Procore daily log under your name.</p>
+      <button class="btn primary wide" id="sign-in" type="button">Sign in with Microsoft</button>
+    </section>
+
+    <!-- Signed in -->
+    <section id="record-view" hidden>
+      <div class="card">
+        <label class="label" for="job">Job number</label>
+        <input id="job" class="job" type="text" inputmode="numeric" pattern="[0-9]*"
+               maxlength="6" placeholder="26014" autocomplete="off">
+        <div class="chips" id="recent-jobs"></div>
+      </div>
+
+      <div class="card center recorder">
+        <button id="rec" class="rec" type="button" aria-label="Start recording">
+          <span class="rec-dot"></span>
+        </button>
+        <div class="timer" id="timer">0:00</div>
+        <div class="hint" id="rec-hint">Tap to record</div>
+
+        <div id="review" hidden>
+          <audio id="player" controls preload="metadata"></audio>
+          <div class="row">
+            <button class="btn" id="rerecord" type="button">Re-record</button>
+            <button class="btn primary" id="send" type="button">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <div class="card" id="recent-card" hidden>
+        <h2>Recent memos</h2>
+        <ul class="recent" id="recent"></ul>
+        <p class="fine">Your confirmation comes by email from CASA, usually within 2 minutes.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="vendor/msal-browser-3.27.0.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

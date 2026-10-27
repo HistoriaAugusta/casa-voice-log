@@ -1,0 +1,155 @@
+:root {
+  --bg: #0E1B36;
+  --card: #16284B;
+  --line: #2A3F66;
+  --ink: #E8EFFB;
+  --muted: #9FB0CC;
+  --red: #DD000A;
+  --red-press: #A80008;
+  --ok: #4CC38A;
+  --warn: #F2B544;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+}
+
+[hidden] { display: none !important; }
+
+.top { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 16px; }
+.logo { width: 220px; max-width: 70%; height: auto; }
+.who { font-size: 14px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.center { text-align: center; }
+
+h1 { margin: 4px 0 8px; font-size: 24px; }
+h2 { margin: 0 0 10px; font-size: 17px; }
+p { margin: 0 0 16px; color: var(--muted); }
+
+.label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.job {
+  width: 100%;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 10px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+.job:focus { outline: none; border-color: var(--ink); }
+.job.bad { border-color: var(--red); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; justify-content: center; }
+.chip {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 15px;
+}
+.chip.on { background: var(--ink); color: var(--bg); }
+
+.recorder { padding: 24px 16px; }
+.rec {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 6px solid var(--ink);
+  background: var(--red);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .1s;
+}
+.rec:active { transform: scale(.96); background: var(--red-press); }
+.rec-dot { width: 54px; height: 54px; border-radius: 50%; background: var(--ink); transition: all .15s; }
+.rec.recording { animation: pulse 1.4s infinite; }
+.rec.recording .rec-dot { border-radius: 10px; width: 50px; height: 50px; }
+.rec:disabled { opacity: .35; }
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(221, 0, 10, .6); }
+  70%  { box-shadow: 0 0 0 26px rgba(221, 0, 10, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(221, 0, 10, 0); }
+}
+
+.timer { font-size: 34px; font-variant-numeric: tabular-nums; margin-top: 14px; }
+.hint { color: var(--muted); font-size: 15px; min-height: 21px; }
+
+#review { margin-top: 18px; }
+audio { width: 100%; margin-bottom: 14px; }
+.row { display: flex; gap: 12px; }
+.row .btn { flex: 1; }
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+.btn.primary { background: var(--red); border-color: var(--red); }
+.btn.primary:active { background: var(--red-press); }
+.btn:disabled { opacity: .45; }
+.wide { width: 100%; }
+
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; font: inherit; padding: 0; }
+
+.status { min-height: 24px; text-align: center; margin: 0 0 14px; font-weight: 600; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.err { color: #FF7A7A; }
+
+.recent { list-style: none; margin: 0; padding: 0; }
+.recent li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.recent li:first-child { border-top: 0; }
+.recent .what { flex: 1; min-width: 0; }
+.recent .job-no { font-weight: 700; }
+.recent .when, .recent .state { font-size: 13px; color: var(--muted); }
+.recent .state.ok { color: var(--ok); }
+.recent .state.warn { color: var(--warn); }
+.undo {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+.undo.confirm { background: var(--red); border-color: var(--red); }
+.fine { font-size: 13px; margin: 10px 0 0; }
