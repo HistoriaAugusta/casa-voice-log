@@ -36,8 +36,15 @@
     <section id="record-view" hidden>
       <div class="card">
         <label class="label" for="job">Job number</label>
-        <input id="job" class="job" type="text" inputmode="numeric" pattern="[0-9]*"
-               maxlength="6" placeholder="26014" autocomplete="off">
+        <div class="combo">
+          <input id="job" class="job" type="text" inputmode="numeric" pattern="[0-9]*"
+                 maxlength="6" placeholder="26014" autocomplete="off"
+                 role="combobox" aria-expanded="false" aria-controls="job-list">
+          <button id="job-toggle" class="combo-toggle" type="button"
+                  aria-label="Show job list" hidden>&#9662;</button>
+          <ul id="job-list" class="job-list" role="listbox" hidden></ul>
+        </div>
+        <div id="job-name" class="job-name"></div>
         <div class="chips" id="recent-jobs"></div>
       </div>
 

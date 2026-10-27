@@ -62,6 +62,46 @@ p { margin: 0 0 16px; color: var(--muted); }
 .job:focus { outline: none; border-color: var(--ink); }
 .job.bad { border-color: var(--red); }
 
+.combo { position: relative; }
+.combo .job { padding-right: 52px; padding-left: 52px; }
+.combo-toggle {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 20px;
+}
+.job-list {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 290px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+.job-list li { padding: 12px 16px; font-size: 17px; border-top: 1px solid var(--line); }
+.job-list li:first-child { border-top: 0; }
+.job-list li b { font-variant-numeric: tabular-nums; margin-right: 8px; }
+.job-list li.on, .job-list li:active { background: var(--line); }
+.job-list .none { color: var(--muted); }
+.job-name { min-height: 22px; margin-top: 8px; text-align: center; color: var(--muted); font-size: 15px; }
+.job-name.ok { color: var(--ink); font-weight: 600; }
+.job-name.warn { color: var(--warn); }
+
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; justify-content: center; }
 .chip {
   border: 1px solid var(--line);

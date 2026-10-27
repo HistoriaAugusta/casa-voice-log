@@ -14,6 +14,10 @@
  *   memo:  subject = job number only; body has "Recorded: <ISO>" and
  *          "Memo: <key>"; the audio attached.
  *   undo:  subject = "Voice log undo <key>"; body "UNDO".
+ *
+ * Job picker: CASA leaves the PM's active Procore jobs as JSON in a hidden
+ * "CASA Voice Log" folder of their own mailbox (every 3 h); the app reads it
+ * here and keeps a copy for offline use. Typing any number still works.
  */
 
 "use strict";
@@ -29,6 +33,9 @@ const CONFIG = {
   directLimit: 2.8 * 1024 * 1024,
   chunk: 3 * 1024 * 1024,
   undoHours: 24,
+  jobFolder: "CASA Voice Log",
+  jobListMaxAgeMs: 60 * 60 * 1000,
+  jobListShown: 50,
 };
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
@@ -152,10 +159,10 @@ async function checkSignIn() {
 
 /* ------------------------------------------------------------ graph */
 
-async function graph(path, { method = "POST", body, tok }) {
+async function graph(path, { method = "POST", body, tok, headers = {} }) {
   const res = await fetch(GRAPH + path, {
     method,
-    headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!res.ok) {
@@ -399,6 +406,77 @@ function rememberJob(job) {
   render.jobs();
 }
 
+const jobList = {
+  all: () => store.get("jobList", { at: 0, jobs: [] }).jobs || [],
+  find: (code) => jobList.all().find((j) => j.code === code),
+
+  async refresh() {
+    if (!account || !navigator.onLine) return;
+    if (Date.now() - store.get("jobList", { at: 0 }).at < CONFIG.jobListMaxAgeMs) return;
+    const tok = await token(["Mail.ReadWrite"]);
+    const folders = await graph(
+      "/me/mailFolders?includeHiddenFolders=true&$top=250&$select=id,displayName",
+      { method: "GET", tok });
+    const folder = folders.value.find((f) => f.displayName === CONFIG.jobFolder);
+    if (!folder) return;                     // CASA has not written one yet
+    const msgs = await graph(`/me/mailFolders/${folder.id}/messages?$top=1&$select=body`, {
+      method: "GET", tok, headers: { Prefer: 'outlook.body-content-type="text"' } });
+    const text = msgs.value[0]?.body?.content;
+    if (!text) return;
+    const jobs = (JSON.parse(text.trim()).jobs || []).filter((j) => JOB_RE.test(j.code));
+    store.set("jobList", { at: Date.now(), jobs });
+    render.jobs();
+  },
+
+  // Code prefix first, then any label containing the text.
+  matches(text) {
+    const q = text.trim().toLowerCase();
+    const all = jobList.all();
+    if (!q) return all;
+    const starts = all.filter((j) => j.code.startsWith(q));
+    return [...starts, ...all.filter((j) => !starts.includes(j) && j.label.toLowerCase().includes(q))];
+  },
+};
+
+const picker = {
+  open: false,
+
+  show() {
+    const items = jobList.matches($("job").value).slice(0, CONFIG.jobListShown);
+    if (!jobList.all().length) return picker.hide();
+    const list = $("job-list");
+    list.replaceChildren(...(items.length ? items.map((j) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      const code = document.createElement("b");
+      code.textContent = j.code;
+      li.append(code, j.label.slice(j.code.length).trim());
+      if (j.code === $("job").value.trim()) li.className = "on";
+      // pointerdown, not click: the input's blur would close the list first
+      li.addEventListener("pointerdown", (e) => { e.preventDefault(); picker.pick(j.code); });
+      return li;
+    }) : [Object.assign(document.createElement("li"),
+                        { className: "none", textContent: "No job in your list matches. You can still send it." })]));
+    list.hidden = false;
+    picker.open = true;
+    $("job").setAttribute("aria-expanded", "true");
+  },
+
+  hide() {
+    $("job-list").hidden = true;
+    picker.open = false;
+    $("job").setAttribute("aria-expanded", "false");
+  },
+
+  pick(code) {
+    $("job").value = code;
+    $("job").classList.remove("bad");
+    picker.hide();
+    $("job").blur();
+    render.jobs();
+  },
+};
+
 /* ------------------------------------------------------------ render */
 
 function clock(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
@@ -439,6 +517,13 @@ const render = {
       b.onclick = () => { $("job").value = j; $("job").classList.remove("bad"); render.jobs(); };
       return b;
     }));
+    // the name under the box: confirms the pick, flags a number not in the list
+    const known = jobList.find(current);
+    const name = $("job-name");
+    name.textContent = known ? known.label.slice(known.code.length).trim()
+      : (JOB_RE.test(current) && jobList.all().length ? "Not in your Procore job list" : "");
+    name.className = `job-name ${known ? "ok" : name.textContent ? "warn" : ""}`;
+    $("job-toggle").hidden = !jobList.all().length;
   },
   recent() {
     const items = recent.list();
@@ -500,7 +585,16 @@ async function main() {
   $("rec").onclick = () => (rec.media?.state === "recording" ? stopRecording() : startRecording());
   $("rerecord").onclick = () => { discardRecording(); startRecording(); };
   $("send").onclick = sendMemo;
-  $("job").oninput = () => { $("job").classList.remove("bad"); render.jobs(); };
+  $("job").oninput = () => { $("job").classList.remove("bad"); render.jobs(); picker.show(); };
+  $("job").onfocus = () => picker.show();
+  $("job").onblur = () => setTimeout(picker.hide, 150);
+  $("job-toggle").addEventListener("pointerdown", (e) => {
+    e.preventDefault();                       // keep the keyboard down
+    if (picker.open) picker.hide(); else picker.show();
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (picker.open && !e.target.closest(".combo")) picker.hide();
+  });
 
   if (!window.MediaRecorder) status("This browser cannot record audio. Update the phone's software.", "err");
 
@@ -513,7 +607,11 @@ async function main() {
   render.recent();
   setMode("idle");
 
-  const wake = async () => { await checkSignIn(); flush(); };
+  const wake = async () => {
+    await checkSignIn();
+    flush();
+    jobList.refresh().catch(() => {});      // the saved copy keeps working
+  };
   window.addEventListener("online", wake);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
   if (account) wake();
