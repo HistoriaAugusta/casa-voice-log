@@ -144,8 +144,9 @@ p { margin: 0 0 16px; color: var(--muted); }
 
 #review { margin-top: 18px; }
 audio { width: 100%; margin-bottom: 14px; }
-.row { display: flex; gap: 12px; }
-.row .btn { flex: 1; }
+.row { display: flex; gap: 10px; }
+.row .btn { flex: 1; padding-left: 8px; padding-right: 8px; white-space: nowrap; }
+.row .btn.confirm { border-color: var(--red); color: #FF7A7A; font-size: 15px; }
 
 .btn {
   font: inherit;

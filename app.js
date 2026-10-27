@@ -38,7 +38,7 @@ const CONFIG = {
   jobListShown: 50,
 };
 
-const APP_VERSION = "v5";    // shown at the bottom; keep equal to sw.js VERSION
+const APP_VERSION = "v6";    // shown at the bottom; keep equal to sw.js VERSION
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const JOB_RE = /^\d{5,6}$/;
 const $ = (id) => document.getElementById(id);
@@ -495,7 +495,7 @@ function setMode(mode) {
   btn.setAttribute("aria-label", mode === "recording" ? "Stop recording" : "Start recording");
   $("review").hidden = mode !== "review";
   $("rec-hint").textContent = { idle: "Tap to record", recording: "Recording. Tap to stop.",
-                                review: "Play it back, then send or re-record." }[mode];
+                                review: "Play it back, then send, re-record or delete." }[mode];
   if (mode === "idle") $("timer").textContent = "0:00";
 }
 
@@ -586,6 +586,19 @@ async function main() {
   $("sign-out").onclick = () => msalApp.logoutRedirect({ account });
   $("rec").onclick = () => (rec.media?.state === "recording" ? stopRecording() : startRecording());
   $("rerecord").onclick = () => { discardRecording(); startRecording(); };
+  $("delete").onclick = () => {
+    const b = $("delete");
+    if (!b.classList.contains("confirm")) {        // 2 taps: no accidental delete
+      b.classList.add("confirm");
+      b.textContent = "Tap again";
+      setTimeout(() => { b.classList.remove("confirm"); b.textContent = "Delete"; }, 4000);
+      return;
+    }
+    b.classList.remove("confirm");
+    b.textContent = "Delete";
+    discardRecording();
+    status("Recording deleted.", "");
+  };
   $("send").onclick = sendMemo;
   $("job").oninput = () => { $("job").classList.remove("bad"); render.jobs(); picker.show(); };
   $("job").onfocus = () => picker.show();
