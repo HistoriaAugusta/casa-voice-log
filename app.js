@@ -118,7 +118,36 @@ async function token(scopes) {
 function signIn() {
   // Redirect, not popup: popups break in home-screen apps. Anything recorded
   // is already in the queue, so leaving the page loses nothing.
-  msalApp.loginRedirect({ scopes: CONFIG.scopes, prompt: "select_account" });
+  if (account) msalApp.loginRedirect({ scopes: CONFIG.scopes, loginHint: account.username });
+  else msalApp.loginRedirect({ scopes: CONFIG.scopes, prompt: "select_account" });
+}
+
+// The sign-in expires after 24 h and iPhones block the silent renewal, so the
+// app goes to Microsoft by itself: it comes straight back if Microsoft still
+// knows the phone, or asks only for the password. Never while a recording is
+// unsent, never offline, and at most once in AUTO_GAP_MS (no redirect loops).
+const AUTO_GAP_MS = 3 * 60 * 1000;
+
+function autoSignIn() {
+  const busy = rec.media?.state === "recording" || !!rec.blob;
+  const recent = Date.now() - (store.get("autoSignInAt", 0) || 0) < AUTO_GAP_MS;
+  if (!account || busy || recent || !navigator.onLine || document.hidden) {
+    showSignInPrompt();
+    return;
+  }
+  store.set("autoSignInAt", Date.now());
+  status("Signing you in again…", "");
+  signIn();
+}
+
+async function checkSignIn() {
+  if (!account || !navigator.onLine) return;
+  try {
+    await token(CONFIG.scopes);
+    $("signin-view").hidden = true;
+  } catch (e) {
+    if (e instanceof NeedsSignIn) autoSignIn();
+  }
 }
 
 /* ------------------------------------------------------------ graph */
@@ -223,7 +252,7 @@ async function flush() {
       } catch (e) {
         if (e instanceof NeedsSignIn) {
           status("Sign in again to send your saved memos.", "warn");
-          showSignInPrompt();
+          autoSignIn();
           break;
         }
         const offline = !navigator.onLine || e instanceof TypeError;
@@ -484,9 +513,10 @@ async function main() {
   render.recent();
   setMode("idle");
 
-  window.addEventListener("online", flush);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) flush(); });
-  if (account) flush();
+  const wake = async () => { await checkSignIn(); flush(); };
+  window.addEventListener("online", wake);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
+  if (account) wake();
 }
 
 main();
