@@ -1,7 +1,7 @@
 /* Keeps the app on the phone so it opens with no signal. Bump VERSION on
  * every release: the new worker caches the new files and drops the old. */
 
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE = `casa-voice-log-${VERSION}`;
 const SHELL = [
   "./",

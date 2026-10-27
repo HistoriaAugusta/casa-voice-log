@@ -452,8 +452,8 @@ const picker = {
       code.textContent = j.code;
       li.append(code, j.label.slice(j.code.length).trim());
       if (j.code === $("job").value.trim()) li.className = "on";
-      // pointerdown, not click: the input's blur would close the list first
-      li.addEventListener("pointerdown", (e) => { e.preventDefault(); picker.pick(j.code); });
+      // click, not pointerdown: a finger that drags the list scrolls it
+      li.addEventListener("click", () => picker.pick(j.code));
       return li;
     }) : [Object.assign(document.createElement("li"),
                         { className: "none", textContent: "No job in your list matches. You can still send it." })]));
@@ -587,7 +587,8 @@ async function main() {
   $("send").onclick = sendMemo;
   $("job").oninput = () => { $("job").classList.remove("bad"); render.jobs(); picker.show(); };
   $("job").onfocus = () => picker.show();
-  $("job").onblur = () => setTimeout(picker.hide, 150);
+  // no hide on blur: scrolling the list blurs the box on iPhone. A tap
+  // outside the box or a pick closes it.
   $("job-toggle").addEventListener("pointerdown", (e) => {
     e.preventDefault();                       // keep the keyboard down
     if (picker.open) picker.hide(); else picker.show();
