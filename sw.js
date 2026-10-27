@@ -1,7 +1,7 @@
 /* Keeps the app on the phone so it opens with no signal. Bump VERSION on
  * every release: the new worker caches the new files and drops the old. */
 
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = `casa-voice-log-${VERSION}`;
 const SHELL = [
   "./",
@@ -17,7 +17,9 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // no-cache: skip the phone's 10-minute copy of GitHub's files
+  const fresh = SHELL.map((u) => new Request(u, { cache: "no-cache" }));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(fresh)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -34,7 +36,7 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith(
     // network first so updates land; the cache answers when there is no signal
-    fetch(e.request)
+    fetch(e.request, { cache: "no-cache" })
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();   // clone now, before the page reads the body

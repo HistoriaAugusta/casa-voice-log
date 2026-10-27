@@ -38,6 +38,7 @@ const CONFIG = {
   jobListShown: 50,
 };
 
+const APP_VERSION = "v5";    // shown at the bottom; keep equal to sw.js VERSION
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const JOB_RE = /^\d{5,6}$/;
 const $ = (id) => document.getElementById(id);
@@ -571,6 +572,7 @@ function showSignInPrompt() {
 
 async function main() {
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  $("version").textContent = `CASA Voice Log ${APP_VERSION}`;
 
   try {
     await msalApp.initialize();

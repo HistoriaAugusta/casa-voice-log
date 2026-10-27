@@ -195,3 +195,4 @@ audio { width: 100%; margin-bottom: 14px; }
 }
 .undo.confirm { background: var(--red); border-color: var(--red); }
 .fine { font-size: 13px; margin: 10px 0 0; }
+.version { text-align: center; opacity: .6; }
